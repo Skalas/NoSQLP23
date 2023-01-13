@@ -26,7 +26,7 @@ En una frase, esta materia trata de *consolidación de datos* para contar una hi
 ** Correo
 Escribe a ~miguel.escalante@itam.mx~ y por favor que el subject del correo diga ~[NOSQL]~.
 ** Discord
-
+[[https://discord.gg/5XKjqNzQ][Pícale acá.]]
 
 * Temario
 
