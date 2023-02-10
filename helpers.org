@@ -3,14 +3,16 @@
 #+EMAIL:  miguel.escalante@itam.mx
 
 * Mongo
-~DHC~ es la variable que tiene el hash del contenedor, es importante tenerlo a la mano para correr cosas como ~mongoimport~ o el ~mongosh~
 ** Inicio de Mongo
 
 #+begin_src shell
+  # Crear el volumen de mongo
   docker volume create mongo-data
+  #Detener el contenedor
   docker stop mongo
+  # Borrar el contenedor
   docker rm mongo
-  # cd carpeta de sus datos
+  # Correr el docker
   docker run -p 27017:27017 \
          -v mongo-data:/data/db \
          --name mongo \
