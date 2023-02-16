@@ -430,7 +430,7 @@ En esta materia no veremos a fondo expresiones regulares, pero aquí 2 ligas út
 1. https://regexone.com/ es un crash course rápido para aprender las bases de las expresiones regulares
 2. https://regexr.com/ es una plataformita para probar sus regexp contra ejemplos suyos o de terceros
 
-*⚠️IMPORTANTE:⚠️* Las expresiones regulares que deben ir en estos queries son [Perl-compatible Regular Expressions (PCRE)](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions)
+*⚠️IMPORTANTE:⚠️* Las expresiones regulares que deben ir en estos queries son [[https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions][Perl-Compatible Regular Expressions]].
 
 ** Queries a arrays
 
