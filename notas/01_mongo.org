@@ -1,7 +1,7 @@
 #+TITLE: MongoDB
 #+AUTHOR: Prof. Miguel Angel Escalante Serrato
 #+EMAIL:  miguel.escalante@itam.mx
-#+DATE: 8 Sep 2022
+#+DATE: 8 Feb 2023
 #+STARTUP: showall
 
 
@@ -34,8 +34,6 @@ Para saber qué BD estamos usando:
 db
 #+end_src
 
-#+RESULTS:
-
 Y para ver todas las DBs que tenemos disponibles:
 
 #+begin_src js
@@ -47,7 +45,7 @@ Vamos ahora a agregar un documento:
 #+begin_src js
   db.towns.insertOne({
      name: "New York",
-     population: 22200000,
+     population: "2022020202",
      lastCensus: ISODate("2016-07-01"),
      famousFor: ["the MOMA", "food", "The Met"],
      mayor: {
@@ -61,8 +59,6 @@ Analicemos línea por línea:
 
 1. *db* es el objeto con el que ~mongosh~ se refiere a la BD que estamos usando, en este caso ~book~. ⚠️*IMPORTANTE*⚠️ - después del elemento db, tenemos el elemento *towns*, esto es una *COLECCIÓN*. Recuerden la jerarquía de los JSON:
 
-#+DOWNLOADED: screenshot @ 2022-09-08 01:56:15
-[[file:images/20220908-015615_screenshot.png]]
 
 Esto significa que estamos creando una colección de documentos llamada ~towns~.
 
@@ -88,34 +84,22 @@ Qué pasa si se nos para una coma❓
 Un error como estos:
 
 #+begin_src js
-db.towns.insertOne({
-   name: "New York",
-   population: 22200000,
-   lastCensus: ISODate("2016-07-01"),
-   famousFor: ["the MOMA", "food", "The Met"],
-   mayor: {
-      name: "Bill de Blasio"
-      party: "D"
-   }
-})
+  db.towns.insertOne({
+      _id: 1,
+     name: "New York",
+     population: 22200000,
+     lastCensus: ISODate("2016-07-01"),
+     famousFor: ["the MOMA", "food", "The Met"],
+     mayor: {
+        name: "Bill de Blasio",
+        party: "D"
+     }
+  })
 #+end_src
 
-Fíjense igual que ~mongosh~ nos ayuda a identar la función principal, y los documentos anidados.
 
 3. Al cerrar llaves y paréntesis, debemos tener esta salida:
 
-#+begin_src js
-db.towns.insertOne({
-   name: "New York",
-   population: 22200000,
-   lastCensus: ISODate("2016-07-01"),
-   famousFor: ["the MOMA", "food", "The Met"],
-   mayor: {
-      name: "Bill de Blasio",
-      party: "D",
-   }
-})
-#+end_src
 
 Qué pasa si volvemos a ejecutar la misma inserción❓
 
@@ -140,35 +124,38 @@ Este tipo de IDs autogenerados es que podemos tener varias instancias de MongoDB
 Intentemos ahora:
 
 #+begin_src js
-db.towns.insertMany([
-   {name: "New York",
-   population: 22200000,
-   lastCensus: ISODate("2016-07-01"),
-   famousFor: ["the MOMA", "food", "The Met"],
-   mayor: {
-      name: "Bill de Blasio",
-      party: "D"
+  db.towns.insertMany([
+      {
+          name: "New York",
+          population: 22200000,
+          lastCensus: ISODate("2016-07-01"),
+          famousFor: ["the MOMA", "food", "The Met"],
+          mayor: {
+              name: "Bill de Blasio",
+              party: "D"
+          }
+      },
+      {
+          name: "London",
+          population: 15000000,
+          lastCensus: ISODate("2018-01-01"),
+          famousFor: ["The British Museum", "Fish & Chips", "The Tate Modern"],
+          mayor: {
+              name: "Sadiq Khan",
+              party: "L"
+          }
+      },
+      {
+          name: "Mexicalpan de las Tunas",
+          population: 20000000,
+          lastCensus: ISODate("2019-01-01"),
+          famousFor: ["Museo Nacional de Antropología", "Tacos de Canasta", "Tlacoyos"],
+          mayor: {
+              name: "Claudia Sheinbaum",
+              party: "MORENA"
+          }
       }
-   },
-   {name: "London",
-   population: 15000000,
-   lastCensus: ISODate("2018-01-01"),
-   famousFor: ["The British Museum", "Fish & Chips", "The Tate Modern"],
-   mayor: {
-      name: "Sadiq Khan",
-      party: "L"
-      }
-   },
-   {name: "Mexicalpan de las Tunas",
-   population: 20000000,
-   lastCensus: ISODate("2019-01-01"),
-   famousFor: ["Museo Nacional de Antropología", "Tacos de Canasta", "Tlacoyos"],
-   mayor: {
-      name: "Claudia Sheinbaum",
-      party: "MORENA"
-      }
-   }
-])
+  ])
 #+end_src
 
 ** SQL es a BDs relacionales como JavaScript es a MongoDB
@@ -189,7 +176,7 @@ El lenguaje base de MongoDB es JavaScript. JavaScript tiene mala fama entre la c
 
 ...aunque es el primero que nos ofrece productividad expedita.
 
-Usaremos JavaScript para todo con MongoDB, hasta pedor ayuda:
+Usaremos JavaScript para todo con MongoDB, hasta pedir ayuda:
 
 #+begin_src js
 db.help()
@@ -216,13 +203,13 @@ Vamos a crear nuestra propia función para insertar ciudades en la colección ~d
 
 #+begin_src js
 function insertCity(name, population, lastCensus, famousFor, mayorInfo) {
-   db.towns.insertOne({
+   return(db.towns.insertOne({
       name: name,
       population: population,
       lastCensus: ISODate(lastCensus),
       famousFor: famousFor,
       mayor : mayorInfo
-   });
+   }));
 }
 #+end_src
 
@@ -247,13 +234,44 @@ Para ensayar las funciones de consulta, debemos importar algunas BDs de prueba.
 
 *** Vamos a utilizar el comando import de esa localidad para insertar uno de los JSONs del repo que descargamos:
 
-#+begin_src sh :var DHC=container
+#+begin_src sh
   docker exec mongo mongoimport --db trainingsessions --drop --file ./mongodb-sample-dataset/sample_training/tweets.json
   docker exec -it mongo mongosh
 #+end_src
 
 ¿Por qué falló?
 #+NOTE Agregar por qué falló y cómo arreglarlo
+#+begin_src shell
+
+  docker cp mongodb-sample-dataset/sample_training/tweets.json mongo:/tweets.json
+
+  docker exec mongo mongoimport --db trainingsessions --drop --file /tweets.json
+
+#+end_src
+
+#+begin_src shell
+  docker stop mongo
+  docker rm mongo
+  docker run \
+         -p 27017:27017 \
+         -v mongo-data:/data/db \
+         -v $PWD/mongodb-sample-dataset:/mongodb-sample-dataset \
+         --name mongo \
+         -d \
+         mongo
+  docker exec mongo mongoimport --db trainingsessions --drop --file /mongodb-sample-dataset/sample_training/tweets.json
+#+end_src
+
+#+begin_src shell
+  cat mongodb-sample-dataset/sample_training/tweets.json | \
+      docker exec -i \
+             mongo \
+             mongoimport \
+             --db trainingsessions \
+             --drop \
+             -c \
+             tweets
+#+end_src
 *** Validamos que haya sido insertada esa colección correctamente:
 
 #+begin_src js
@@ -264,9 +282,9 @@ db.tweets.find()
 
 Ahora si vamos a leer estos datos. Para leer datos en MongoDB la función base es ~find()~:
 
-- ~db.towns.find()~ trae todos los _documentos_ de la _colección_ ~towns~.
-- ~db.towns.find({ "_id" : ObjectId("611ce2e73afe7ee944574e51") })~ va a traer el documento con ID ~611ce2e73afe7ee944574e51~. Recordemos que los ID son autogenerados y el atributo ~_id~ es creado automáticamente
-- ~db.towns.find( {"_id" : ObjectId("611ce2e73afe7ee944574e51")}, {population : 1} )~ va a traer el documento con ID ~611ce2e73afe7ee944574e51~ pero solo su atributo ~population~ similar a un ~select population from towns where id = 611ce2e73afe7ee944574e51~
+- ~db.tweets.find()~ trae todos los _documentos_ de la _colección_ ~tweets~.
+- ~db.tweets.find({ "_id" : ObjectId("5c8eccb0caa187d17ca624d4") })~ va a traer el documento con ID ~5c8eccb0caa187d17ca624d4~. Recordemos que los ID son autogenerados y el atributo ~_id~ es creado automáticamente
+- ~db.tweets.find( {"_id" : ObjectId("5c8eccb0caa187d17ca624d4")}, {population : 1} )~ va a traer el documento con ID ~611ce2e73afe7ee944574e51~ pero solo su atributo ~population~ similar a un ~select population from towns where id = 611ce2e73afe7ee944574e51~
 - ~db.towns.find( {"_id" : ObjectId("611ce2e73afe7ee944574e51")}, {population : 0} )~ va a traer el mismo documento, pero ahora con todos sus atributos *EXCEPTO* ~population~
 - ~db.towns.find( {population : 6200})~ va a traer el documento con ~population~ igual a _6200_
 - ~db.towns.find( {name : "London"})~ va a traer el documento con ~name~ igual a _"London"_
@@ -468,7 +486,7 @@ db.tweets.find({"entities.urls.indices":{$lte:50, $gte:90}})
 Y para buscar documentos cuyo N-avo elemento sea igual a X:
 
 #+begin_src js
-db.tweets.find({"entities.urls.indices.10000":59})
+db.tweets.find({"entities.urls.indices.1":59})
 #+end_src
 
 Recordemos  que los arrays en MongoDB *están indexados desde 0 y no desde 1*.
@@ -485,7 +503,7 @@ Y para buscar documentos cuyos atributos tipo array tengan más de 7 elementos:
 db.tweets.find({"entities.hashtags.7":{$exists:true}})
 #+end_src
 
-Podemos combinar operadores ~$exists~, ~$gte~ y ~$lte~ para buscar documentos que tengan un array entre N y M elementos. El siguiente query regresa los tuits que tengan *EXACTAMENTE* un hashtag, aprovechando la _dot notation (.)_ para viajar de ~entities->hashtags->[elemento del array con índice 0]~ y verificar su existencia con ~{$exists:true}~, y hacer elk mismo viaje al ~[elemento del array con índice 1]~ y asegurarnos que no existe con ~{$exists:false}~.
+Podemos combinar operadores ~$exists~, ~$gte~ y ~$lte~ para buscar documentos que tengan un array entre N y M elementos. El siguiente query regresa los tuits que tengan *EXACTAMENTE* un hashtag, aprovechando la _dot notation (.)_ para viajar de ~entities->hashtags->[elemento del array con índice 0]~ y verificar su existencia con ~{$exists:true}~, y hacer el mismo viaje al ~[elemento del array con índice 1]~ y asegurarnos que no existe con ~{$exists:false}~.
 
 #+begin_src js
 db.tweets.find({"entities.hashtags.1":{$exists:false},"entities.hashtags.0":{$exists:true}},{"entities":1})
@@ -608,7 +626,7 @@ Este query también es similar a los que vimos para consultar documentos de 1er 
 Si deseamos limitar la búsqueda a un índice del array, como para evitar tener un documento que no cumpla con las condiciones, podemos especificarlo así:
 
 #+begin_src js
-db.inventory.find( { 'instock.0.qty': { $lte: 20 } } )
+  db.inventory.find( { 'instock.0.qty': { $lte: 20 } } )
 #+end_src
 
 Este query nos regresará del arreglo ~instock~ los *PRIMEROS* documentos (índice 0) cuyo atributo ~qty~ sea igual o menor a 20.
@@ -729,15 +747,13 @@ db.articles.find({},{"purchase":{$slice:1}})
 Este query nos regresará todos los documentos, pero su array ~purchase~ solo tendrá el 1er elemento. ~$slice~ acepta *números positivos* para "rebanar" el array de izq a derecha, y *números negativos* para "rebanarlo" de derecha a izq:}
 
 #+begin_src js
-db.articles.find({},{"purchase":{$slice:-4}})
+db.articles.find({},{"purchase":{$slice:-2}})
 #+end_src
-#+begin_src js
-db.articles.find()
-#+end_src
+
 Del mismo modo, podemos usar el operador ~$slice~ para obtener un elemento en específico del array usando la forma ~find({},{atributo:{$slice:[indice_inicio, numero_de_elementos]}}~. El siguiente comando traerá solamente el 2o elemento de los arrays ~purchase~.
 
 #+begin_src js
-db.articles.find({},{purchase:{$slice:[0,1]}})
+db.articles.find({},{purchase:{$slice:[1,1]}})
 #+end_src
 
 Aquí nos posicionamos en el índice 1 (el 2o elemento), y a partir de ahí, traemos 1 elemento.
