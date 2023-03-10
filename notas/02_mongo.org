@@ -76,7 +76,7 @@ Las agregaciones en MongoDB se hacen a través de *PIPELINES*, esto tiene la sig
 Estos pipelines son idénticos a hacer esto:
 
 #+begin_src js
-  funcion_f(funcion_g(funcion_h(funcion_i(w,x,y,z))))
+  funcion_i(funcion_h(funcion_g(funcion_f(w,x,y,z))))
 #+end_src
 
 Con la diferencia que esto es mucho menos legible.
