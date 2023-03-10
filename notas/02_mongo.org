@@ -185,8 +185,7 @@ El ~group by~ de MongoDB y el corazón de operaciones como count, sum, avg, etc.
   db.universities.aggregate([
       { $match:{country: 'Spain', city: 'Salamanca'} },
       { $project:{_id : 0, country : 1, city : 1, name : 1} },
-      { $group:{_id: "$name", conteo:{$sum:1}} },
-      { $project:{_id : 0, "uni" : "$_id"} }
+      { $group:{_id: "$name", conteo:{$sum:1}} }
   ])
 #+end_src
 
