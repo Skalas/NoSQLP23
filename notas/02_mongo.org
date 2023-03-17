@@ -232,9 +232,25 @@ Toma la ejecución de toda la salida del pipeline y lo guarda en otra colección
   db.universities.aggregate([
       { $match:{country: 'Spain', city: 'Salamanca'} },
       { $project:{ country : 1, city : 1, name : 1} },
-      { $group:{_id: "$name", conteo:{$sum:1}} },
-      { $project:{_id : 0, "uni" : "$_id", conteo:1} },
+      { $group:{_id: "$name", conteo:{$sum:1}, fecha: Date()} },
+      { $project:{ _id : 0, "uni" : "$_id", conteo:1} },
       { $out:"miranomas" }
+  ])
+#+end_src
+
+** Stage ~$merge~
+
+Este agrega a la colección que ya tiene documentos y anexa los resultados a la colección.
+
+En ~$out~, sobreescribe la colección.
+
+#+begin_src js
+  db.universities.aggregate([
+      { $match:{country: 'Spain', city: 'Salamanca'} },
+      { $project:{ country : 1, city : 1, name : 1} },
+      { $group:{_id: "$name", conteo:{$sum:1}} },
+      { $project:{ _id : 0, "uni" : "$_id", conteo:1} },
+      { $merge:{into: "miranomas"} }
   ])
 #+end_src
 
@@ -368,18 +384,33 @@ Entonces tenemos el siguiente resultado:
 
 1. ~$unwind~ de un array vacío no regresará nada
 2. ~$unwind~ de un atributo simple regresará el mismo _enclosing document_
+#+begin_src js
+  db.universities.aggregate([
+      { $match : { name : 'USAL' } },
+      { $unwind : '$city' }
+  ])
+#+end_src
 3. ~$unwind~ de un array de un diccionario que tiene un 2o o 3er array, solo va a "desenrollar" el diccionario que solicitamos en ese operador, por lo que los otros arrays estarán repetidos
 
 ** Para qué sirve esto?
 
-Para hacer cosas como contar los registros de alumnos de 2017:
-
+Para hacer cosas como contar las universidades con registros de alumnos de 2017:
 #+begin_src js
   db.universities.aggregate([
       { $unwind : '$students' },
       { $project : { _id : 0, 'students.year' : 1, 'students.number' : 1 } },
       { $match: {'students.year':2017}},
-      { $group:{_id: "$students.year", conteo:{$count:{}}} },
+      { $group:{_id: "$students.year", conteo:{$count: {}} }},
+  ])
+#+end_src
+
+O  sumar los registros de alumnos de 2017:
+#+begin_src js
+  db.universities.aggregate([
+      { $unwind : '$students' },
+      { $project : { _id : 0, 'students.year' : 1, 'students.number' : 1 } },
+      { $match: {'students.year':2017}},
+      { $group:{_id: "$students.year", suma:{$sum: "$students.number"}} },
   ])
 #+end_src
 
@@ -402,6 +433,41 @@ O el promedio de alumnos de 2014 a 2017
       { $project: { _id: 0, "name": 1, 'students.year': 1, 'students.number': 1 } },
       { $group: { _id: "$name", promedioAlumnos: { $avg: "$students.number" } } },
       {$project:{_id:0,"uni":"$_id",promedioAlumnos:1}}
+  ])
+#+end_src
+
+O el promedio de alumnos de 2015 a 2017
+
+#+begin_src js
+  db.universities.aggregate([
+      { $unwind: '$students' },
+      { $project: { _id: 0, "name": 1, 'students.year': 1, 'students.number': 1 } },
+      {$match: {"students.year":{$gte:2015}}},
+      { $group: { _id: "$name", promedioAlumnos: { $avg: "$students.number" } } },
+      {$project:{_id:0,"uni":"$_id",promedioAlumnos:1}}
+  ])
+#+end_src
+
+O Cuáles son los años con registros en las universidades
+
+#+begin_src js
+  db.universities.aggregate([
+      { $unwind: '$students' },
+      { $project: { _id: 0, "name": 1, 'students.year': 1, 'students.number': 1 } },
+      {$match: {"students.year":{$gte:2015}}},
+      { $group: { _id: "$name", agnos: { $addToSet: "$students.year" } } },
+      {$project:{_id:0,"uni":"$_id",agnos:1}}
+  ])
+#+end_src
+
+Agregar un objeto completo a Arrays .
+#+begin_src js
+  db.universities.aggregate([
+      { $unwind: '$students' },
+      { $project: { _id: 0, "name": 1, 'students.year': 1, 'students.number': 1 } },
+      {$match: {"students.year":{$gte:2015}}},
+      { $group: { _id: "$name", agnos: { $mergeObjects: "$students" } } },
+      {$project:{_id:0,"uni":"$_id",agnos:1}}
   ])
 #+end_src
 
@@ -514,7 +580,10 @@ El resultado debe ser:
 El sort y el limit puede usarse como stage de un pipeline de agregación, o puede usarse _standalone_ como lo hemos hecho antes para ordenar resulsets individuales.
 
 * Stage ~$addFields~
+#+begin_src sh
+cat ../data/restaurants.json | docker exec -i mongo mongoimport --db=reviews --collection=restaurants
 
+#+end_src
 Crea campos nuevos basados en las agregaciones, como una suma concentrada final, o un promedio concentrado final.
 
 ⚠️No confundir con el ~$group~, el ~$addFields~ NO AGREGA NI AGRUPA.⚠️
@@ -522,49 +591,18 @@ Crea campos nuevos basados en las agregaciones, como una suma concentrada final,
 Regresemos a nuestra BD de reviews de restaurantes con ~use reviews~
 
 La estructura de cada review es:
-
 #+begin_src js
-  {
-      _id: ObjectId("612d222983a7f8a60c193d14"),
-      address: {
-          building: '351',
-          coord: [ -73.98513559999999, 40.7676919 ],
-          street: 'West   57 Street',
-          zipcode: '10019'
-      },
-      borough: 'Manhattan',
-      cuisine: 'Irish',
-      grades: [
-          { date: ISODate("2014-09-06T00:00:00.000Z"), grade: 'A', score: 2 },
-          {
-              date: ISODate("2013-07-22T00:00:00.000Z"),
-              grade: 'A',
-              score: 11
-          },
-          {
-              date: ISODate("2012-07-31T00:00:00.000Z"),
-              grade: 'A',
-              score: 12
-          },
-          {
-              date: ISODate("2011-12-29T00:00:00.000Z"),
-              grade: 'A',
-              score: 12
-          }
-      ],
-      name: 'Dj Reynolds Pub And Restaurant',
-      restaurant_id: '30191841'
-  }
+  use reviews
+  db.restaurants.findOne()
 #+end_src
-
 Cómo podemos agregar un atributo a cada restaurante para tener su score total agregado de todos sus reviews y su promedio?
 
 #+begin_src js
   db.restaurants.aggregate([
-      {$unwind:"$grades"},
       {$project:{"grades.score":1, "name":1}},
+      {$unwind:"$grades"},
       {$group:{_id:"$name", "gradeArray":{$push:"$grades.score"}}},
-      {$project:{"name":"$_id",_id:0,"gradeArray":1}},      {$addFields:{"totalScore":{$sum:"$gradeArray"},"avgScore":{$avg:"$gradeArray"}}}
+      {$project:{"name":"$_id",_id:0,"gradeArray":1}}, {$addFields:{"totalScore":{$sum:"$gradeArray"},"avgScore":{$avg:"$gradeArray"}}}
   ])
 #+end_src
 
@@ -728,7 +766,7 @@ Posterior a esto podríamos continuar el pipeline, por ejemplo, para contar los 
 Para esto debemos descargar [[https://github.com/Skalas/nosql2022/raw/main/datasets/grades.zip][esta BD de calificaciones]] e insertarla con ~mongoimport~:
 
 #+begin_src shell
-cat grades.json | docker exec -i  mongoimport --db=sample_training --collection=grades
+cat ../data/grades.json | docker exec -i mongo mongoimport --db=sample_training --collection=grades
 #+end_src
 
 Primero debemos enterarnos de qué va la BD. Vamos a sacar los primeros 3 registros para ver de qué tratan:
