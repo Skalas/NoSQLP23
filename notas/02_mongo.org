@@ -766,7 +766,8 @@ Posterior a esto podríamos continuar el pipeline, por ejemplo, para contar los 
 Para esto debemos descargar [[https://github.com/Skalas/nosql2022/raw/main/datasets/grades.zip][esta BD de calificaciones]] e insertarla con ~mongoimport~:
 
 #+begin_src shell
-cat ../data/grades.json | docker exec -i mongo mongoimport --db=sample_training --collection=grades
+  cat ../data/grades.json | docker exec -i mongo mongoimport --db=sample_training --collection=grades
+  docker exec -it mongo mongosh
 #+end_src
 
 Primero debemos enterarnos de qué va la BD. Vamos a sacar los primeros 3 registros para ver de qué tratan:
@@ -775,41 +776,6 @@ Primero debemos enterarnos de qué va la BD. Vamos a sacar los primeros 3 regist
   use sample_training
   db.grades.find().limit(3)
 
-  [
-      {
-          _id: ObjectId("56d5f7eb604eb380b0d8d8ce"),
-          student_id: 0,
-          scores: [
-              { type: 'exam', score: 78.40446309504266 },
-              { type: 'quiz', score: 73.36224783231339 },
-              { type: 'homework', score: 46.980982486720535 },
-              { type: 'homework', score: 76.67556138656222 }
-          ],
-          class_id: 339
-      },
-      {
-          _id: ObjectId("56d5f7eb604eb380b0d8d8d6"),
-          student_id: 0,
-          scores: [
-              { type: 'exam', score: 25.926204502143857 },
-              { type: 'quiz', score: 37.23668404170315 },
-              { type: 'homework', score: 19.609679551976487 },
-              { type: 'homework', score: 98.7923690220697 }
-          ],
-          class_id: 108
-      },
-      {
-          _id: ObjectId("56d5f7eb604eb380b0d8d8da"),
-          student_id: 1,
-          scores: [
-              { type: 'exam', score: 95.4702770345805 },
-              { type: 'quiz', score: 59.14125426136129 },
-              { type: 'homework', score: 34.32836889016887 },
-              { type: 'homework', score: 84.07534235774499 }
-          ],
-          class_id: 237
-      }
-  ]
 #+end_src
 
 Parece que son calificaciones de un alumno, de una clase, para diferentes mecanismos de evaluación: examen, quiz, y tareas.
@@ -822,7 +788,7 @@ Primero, veamos cuantos registros tenemos:
   db.grades.find().count()
 #+end_src
 
-Si la perspectiva está anclada en ~class_id~, entonces deberíamos tener 1000000 clases, o 1000000 estudiantes si la perspectiva está en ~student_id~.
+Si la perspectiva está anclada en ~class_id~, entonces deberíamos tener 100,000 clases, o 100,000 estudiantes si la perspectiva está en ~student_id~.
 
 #+begin_src js
   db.grades.distinct("class_id")
@@ -864,8 +830,16 @@ Ahora vamos a tratar de armar el query para dar respuesta a la pregunta inicial:
 
 #+begin_src js
   db.grades.aggregate([
-      {$unwind:"$scores"},{$project:{"student_id":0}},
-      {$group:{_id:{"clase":"$class_id","eval":"$scores.type"}, "promedio":{$avg:"$scores.score"}}},
+      {$unwind:"$scores"},
+      {$project:{"student_id":0}},
+      {$group:{
+          _id:{
+              "clase":"$class_id",
+              "eval":"$scores.type"
+          },
+          "promedio":
+          {$avg:"$scores.score"}
+      }},
       {$sort:{"_id.clase":1,"_id.eval":1}}
   ])
 
