@@ -1,0 +1,11 @@
+#+TITLE: Proyecto Final NOSQL
+#+AUTHOR: Prof. Miguel Angel Escalante Serrato
+#+EMAIL:  miguel.escalante@itam.mx
+#+DATE: 27-Apr-23
+#+STARTUP: showall
+* Objetivo
+Ver el funcionamiento y utilidad de las diferentes bases de datos que vimos durante el curso.
+* Proyecto
+** Generar una base de datos a partir de una api en MongoDB
+Necesitamos que se inserten un conjunto de datos que luego se transformarán en el
+** ETL a Neo4j
