@@ -1,7 +1,7 @@
-#+TITLE: Proyecto Final NoSQL2022
+#+TITLE: Proyecto Final NoSQL2023
 #+AUTHOR: Prof. Miguel Angel Escalante Serrato
 #+EMAIL:  miguel.escalante@itam.mx
-#+DATE: 1-dec-2022
+#+DATE: 2023-04-27
 #+STARTUP: showall
 
 * Objetivo
