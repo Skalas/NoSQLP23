@@ -20,4 +20,4 @@ Además se requieren al menos 3 queries interesantes con respecto a cada base de
 
 *  Fecha límite
 
-La entrega es el día del examen hasta las 23:59 CST.
+La entrega es el día antes del examen hasta las 23:59 CST.
