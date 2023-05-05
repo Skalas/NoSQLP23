@@ -276,13 +276,13 @@ En esta caja vamos a poder escribir queries en "Cypher". Qué está haciendo est
 #+begin_src cypher
 LOAD CSV WITH HEADERS FROM "https://github.com/Skalas/nosql2022/raw/main/datasets/categories.csv" AS row
 CREATE (n:Category)
-SET n = row
+SET n = row;
 #+end_src
 ** Suppliers
 #+begin_src cypher
 LOAD CSV WITH HEADERS FROM "https://github.com/Skalas/nosql2022/raw/main/datasets/suppliers.csv" AS row
 CREATE (n:Supplier)
-SET n = row
+SET n = row;
 #+end_src
 
 Con esto nuestra bd se ve asi:
@@ -298,7 +298,7 @@ Vamos a crear los /edges/ que van desde ~Product~ a ~Category~:
 #+begin_src cypher
 MATCH (p:Product),(c:Category)
 WHERE p.categoryID = c.categoryID
-CREATE (p)-[:PART_OF]->(c)
+CREATE (p)-[:PART_OF]->(c);
 #+end_src
 
 Qué estamos haciendo aquì?
@@ -313,7 +313,7 @@ Ahora vamos a crear los /edges/ para relacionar ~Product~ y ~Supplier~:
 #+begin_src cypher
 MATCH (p:Product),(s:Supplier)
 WHERE p.supplierID = s.supplierID
-CREATE (s)-[:SUPPLIES]->(p)
+CREATE (s)-[:SUPPLIES]->(p);
 #+end_src
 
 Misma estructura que el comando anterior.
@@ -346,7 +346,7 @@ Qué estamos haciendo aquí?
 
 #+begin_src cypher
   MATCH (s:Supplier) -->(:Product) -->(c:Category {categoryName:"Produce"})
-  RETURN DISTINCT s.companyName as ProduceSuppliers
+  RETURN DISTINCT s.companyName as ProduceSuppliers;
 #+end_src
 
 Qué estamos haciendo aquí?
@@ -362,21 +362,21 @@ Qué estamos haciendo aquí?
 #+begin_src cypher
 LOAD CSV WITH HEADERS FROM "https://github.com/Skalas/nosql2022/raw/main/datasets/customers.csv" AS row
 CREATE (n:Customer)
-SET n = row
+SET n = row;
 #+end_src
 
 ** Orders
 #+begin_src cypher
 LOAD CSV WITH HEADERS FROM "https://github.com/Skalas/nosql2022/raw/main/datasets/orders.csv" AS row
 CREATE (n:Order)
-SET n = row
+SET n = row;
 #+end_src
 
 ** Relación Customers -> Orders
 #+begin_src cypher
 MATCH (c:Customer),(o:Order)
 WHERE c.customerID = o.customerID
-CREATE (c)-[:PURCHASED]->(o)
+CREATE (c)-[:PURCHASED]->(o);
 #+end_src
 
 ** Relación Order -> Product
@@ -389,13 +389,16 @@ MATCH (p:Product), (o:Order)
 WHERE p.productID = row.productID AND o.orderID = row.orderID
 CREATE (o)-[details:ORDERS]->(p)
 SET details = row,
-details.quantity = toInteger(row.quantity)
+details.quantity = toInteger(row.quantity);
 #+end_src
 
 Vamos a tener el siguiente grafo:
 
 Podemos ver que al menos en esta versión de Northwind, tenemos bastantes clientes que nunca nos han pedido, pero *esto no es una comunidad*, porque no hay ninguna conexión entre estos. Tienen cosas en común, pero ninguna relación, por lo que no podemos decir que es una comunidad.
 
+#+begin_src shell
+ docker run -it neo4j cypher-shell -a 18.207.120.182 -u neo4j -p neo
+#+end_src
 ** Ejercicios de SQL pero en Neo4j
 
 *** Cuál es la orden más reciente por cliente?
@@ -411,7 +414,7 @@ En Cypher
 #+begin_src cypher
 match (c:Customer)-[:PURCHASED]->(o:Order)
 return c.contactName as name, max(o.orderDate) as max_ord_date
-order by name
+order by name;
 #+end_src
 
 *** De nuestros clientes, qué función desempeñan y cuántos son?
@@ -426,7 +429,7 @@ order by conteo desc;
 #+begin_src cypher
 match (c:Customer)
 return c.contactTitle as title, count(c.contactTitle) as title_count
-order by title
+order by title;
 #+end_src
 
 *** Cuántos productos tenemos de cada categoría?
@@ -438,9 +441,13 @@ group by c.category_name;
 #+end_src
 
 #+begin_src cypher
-match (c:Category)<-[:PART_OF]-(p:Product)
-return c.categoryName as name, count(c.categoryName) as name_count
-order by name
+    match (c:Category)<-[:PART_OF]-(p:Product)
+    return c.categoryName as name, count(c.categoryName) as name_count
+    order by name;
+
+  match (p:Product) -[:PART_OF]-> (c:Category)
+  return c.categoryName as name, count(c.categoryName) as name_count
+  order by name;
 #+end_src
 
 *** Cómo podemos generar el reporte de reorder?
@@ -455,7 +462,7 @@ where (units_in_stock<reorder_level);
 match (p:Product)
 where p.unitsInStock < p.reorderLevel
 return p.productName as prod_name, p.unitsInStock as units_stock, p.reorderLevel as reord_level
-order by units_stock
+order by units_stock;
 #+end_src
 
 *** A donde va nuestro envío más voluminoso?
@@ -479,14 +486,14 @@ Con order.freight (otra respuesta correcta en SQL):
 #+begin_src cypher
 match (o:Order)
 return o.shipCountry as ship_country, max(toFloat(o.freight)) as max_freight
-order by max_freight desc
+order by max_freight desc;
 #+end_src
 
 Con order_details.quantity (respuesta incorrecta, pero la ponemos aquí para respetar el replicado en Cypher de respuestas en SQL)
 #+begin_src cypher
 match (o:Order)-[od:ORDERS]->(p:Product)
 return o.shipCountry as ship_ctry, max(od.quantity) as max_qty
-order by max_qty desc
+order by max_qty desc;
 #+end_src
 
 TBD: Exporar responder esta pregunta con la suma de quantities de todas las ordenes de un país, y luego sacar el max
@@ -531,8 +538,8 @@ OJO! Debemos instalar la librería APOC para poder correr las funciones de arrib
 La instalación de APOC es como sigue:
 
 1. Entrar a la máquina virtual de EC2 en donde tenemos el Neo4j con ~ssh -i labsuser.pem ubuntu@[LA IP DE SU MÁQUINA]~
-2. Entrar el comando ~wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.3.0.3/apoc-4.3.0.3-all.jar~ - esto va a descargar la librería
-3. Debemos copiar esta librería a ~/var/lib/neo4j/plugins/~ con el comando ~cp apoc-4.3.0.3-all.jar /var/lib/neo4j/plugins/~
+2. Entrar el comando ~ wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.1.0.0/apoc-4.1.0.0-core.jar ~ - esto va a descargar la librería
+3. Debemos copiar esta librería a ~/var/lib/neo4j/plugins/~ con el comando ~cp apoc-4.1.0.1-all.jar /var/lib/neo4j/plugins/~
 4. Ahora debemos reiniciar el Neo4j con el comando ~sudo systemctl restart neo4j.service~
 
 Con eso ya debemos tener acceso a las funciones de APOC.
