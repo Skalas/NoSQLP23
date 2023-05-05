@@ -538,7 +538,7 @@ OJO! Debemos instalar la librería APOC para poder correr las funciones de arrib
 La instalación de APOC es como sigue:
 
 1. Entrar a la máquina virtual de EC2 en donde tenemos el Neo4j con ~ssh -i labsuser.pem ubuntu@[LA IP DE SU MÁQUINA]~
-2. Entrar el comando ~ wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.1.0.0/apoc-4.1.0.0-core.jar ~ - esto va a descargar la librería
+2. Entrar el comando ~wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.1.0.0/apoc-4.1.0.0-core.jar~ - esto va a descargar la librería
 3. Debemos copiar esta librería a ~/var/lib/neo4j/plugins/~ con el comando ~cp apoc-4.1.0.0-core.jar /var/lib/neo4j/plugins/~
 4. Ahora debemos reiniciar el Neo4j con el comando ~sudo systemctl restart neo4j.service~
 
